@@ -91,7 +91,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 В отдельном терминале из директории `backend/`:
 
 ```powershell
-celery -A app.workers.celery_app.celery_app worker --loglevel=INFO
+celery -A app.workers.celery_app.celery_app worker --loglevel=INFO --pool=solo
 ```
 
 API доступно по префиксу `/api/v1`. Сначала зарегистрируйте пользователя через `POST /api/v1/auth/register`, затем получите JWT через `POST /api/v1/auth/login` и передавайте токен в заголовке `Authorization: Bearer <token>`.
