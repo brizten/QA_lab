@@ -32,16 +32,16 @@ class Settings(BaseSettings):
 
     @property
     def database_url(self) -> str:
-        return str(
-            URL.create(
-                drivername="postgresql+psycopg",
-                username=self.postgres_user,
-                password=self.postgres_password,
-                host=self.postgres_host,
-                port=self.postgres_port,
-                database=self.postgres_db,
-            )
+        database_url = URL.create(
+            drivername="postgresql+psycopg",
+            username=self.postgres_user,
+            password=self.postgres_password,
+            host=self.postgres_host,
+            port=self.postgres_port,
+            database=self.postgres_db,
         )
+        # str(URL) masks the password as "***" and is not a usable DSN.
+        return database_url.render_as_string(hide_password=False)
 
     @property
     def redis_url(self) -> str:
