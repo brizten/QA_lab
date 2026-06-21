@@ -18,9 +18,12 @@ def execute_test_run(test_run_id: int) -> dict[str, int | str]:
         test_run.started_at = datetime.now(timezone.utc)
         db.commit()
 
-        test_run.status = TestRunStatus.SUCCEEDED
+        test_run.status = TestRunStatus.PASSED
         test_run.result = {"message": "Test runner is not implemented yet"}
         test_run.finished_at = datetime.now(timezone.utc)
+        test_run.duration_ms = int(
+            (test_run.finished_at - test_run.started_at).total_seconds() * 1000
+        )
         db.commit()
 
         return {"test_run_id": test_run_id, "status": test_run.status.value}
@@ -30,7 +33,13 @@ def execute_test_run(test_run_id: int) -> dict[str, int | str]:
         if failed_test_run is not None:
             failed_test_run.status = TestRunStatus.FAILED
             failed_test_run.result = {"message": "Worker execution failed"}
+            failed_test_run.error_message = "Worker execution failed"
             failed_test_run.finished_at = datetime.now(timezone.utc)
+            if failed_test_run.started_at is not None:
+                failed_test_run.duration_ms = int(
+                    (failed_test_run.finished_at - failed_test_run.started_at).total_seconds()
+                    * 1000
+                )
             db.commit()
         raise
     finally:

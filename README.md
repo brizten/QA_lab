@@ -69,10 +69,16 @@ pip install -r requirements.txt
 Copy-Item .env.example .env
 ```
 
-Создайте и примените первую миграцию:
+Примените существующие миграции:
 
 ```powershell
-alembic revision --autogenerate -m "create initial tables"
+alembic upgrade head
+```
+
+После изменения SQLAlchemy-моделей создайте новую ревизию и примените её:
+
+```powershell
+alembic revision --autogenerate -m "describe schema change"
 alembic upgrade head
 ```
 

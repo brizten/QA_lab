@@ -14,15 +14,16 @@ class TaskQueueError(Exception):
     pass
 
 
-def create_test_run(db: Session, payload: TestRunCreate, initiated_by_id: int) -> TestRun:
+def create_test_run(db: Session, payload: TestRunCreate, started_by_user_id: int) -> TestRun:
     if db.get(TestCase, payload.test_case_id) is None:
         raise TestCaseNotFoundError("Test case not found")
 
     test_run = TestRun(
         test_case_id=payload.test_case_id,
-        initiated_by_id=initiated_by_id,
+        started_by_user_id=started_by_user_id,
+        environment=payload.environment,
         parameters=payload.parameters,
-        status=TestRunStatus.PENDING,
+        status=TestRunStatus.QUEUED,
     )
     db.add(test_run)
     db.commit()
@@ -37,7 +38,4 @@ def create_test_run(db: Session, payload: TestRunCreate, initiated_by_id: int) -
         db.refresh(test_run)
         raise TaskQueueError() from exc
 
-    test_run.celery_task_id = task.id
-    db.commit()
-    db.refresh(test_run)
     return test_run

@@ -19,7 +19,7 @@ def list_test_runs(db: DbSession, current_user: CurrentUser) -> list[TestRun]:
     return list(
         db.scalars(
             select(TestRun)
-            .where(TestRun.initiated_by_id == current_user.id)
+            .where(TestRun.started_by_user_id == current_user.id)
             .order_by(TestRun.created_at.desc())
         )
     )
@@ -30,7 +30,7 @@ def get_test_run(test_run_id: int, db: DbSession, current_user: CurrentUser) -> 
     test_run = db.get(TestRun, test_run_id)
     if test_run is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Test run not found")
-    if test_run.initiated_by_id != current_user.id:
+    if test_run.started_by_user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Test run access denied")
     return test_run
 

@@ -15,8 +15,8 @@ def list_test_cases(db: DbSession, current_user: CurrentUser) -> list[TestCase]:
     return list(
         db.scalars(
             select(TestCase)
-            .where(TestCase.created_by_id == current_user.id)
-            .order_by(TestCase.name)
+            .where(TestCase.owner_id == current_user.id)
+            .order_by(TestCase.code)
         )
     )
 
@@ -28,10 +28,8 @@ def create_test_case(
     module = db.get(Module, payload.module_id)
     if module is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Module not found")
-    if module.owner_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Module access denied")
 
-    test_case = TestCase(**payload.model_dump(), created_by_id=current_user.id)
+    test_case = TestCase(**payload.model_dump(), owner_id=current_user.id)
     db.add(test_case)
     db.commit()
     db.refresh(test_case)

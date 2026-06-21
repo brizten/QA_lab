@@ -4,6 +4,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class ModuleCreate(BaseModel):
+    code: str = Field(min_length=1, max_length=100)
     name: str = Field(min_length=1, max_length=255)
     description: str | None = None
 
@@ -12,7 +13,8 @@ class ModuleRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    code: str
     name: str
     description: str | None
-    owner_id: int
     created_at: datetime
+    updated_at: datetime
