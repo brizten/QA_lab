@@ -100,6 +100,16 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 celery -A app.workers.celery_app.celery_app worker --loglevel=INFO --pool=solo
 ```
 
+### Создание локального администратора
+
+Из директории `backend/` создайте локального администратора командой:
+
+```powershell
+python -m scripts.create_admin
+```
+
+Скрипт создаёт `admin@local.com` с паролем `admin` и ролью `ADMIN`. При повторном запуске существующий пользователь не изменяется и не дублируется.
+
 ## Аутентификация API
 
 API доступно по префиксу `/api`. Пароли сохраняются только в виде bcrypt-хеша, а для авторизации используется JWT access token.
