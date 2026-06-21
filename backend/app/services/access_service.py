@@ -15,13 +15,11 @@ class TestRunAccessForbiddenError(Exception):
 
 
 def ensure_test_case_can_be_run(test_case: TestCase, user: User) -> None:
-    if user.role is UserRole.QA and not test_case.is_active:
-        raise TestCaseRunForbiddenError("QA can only run active test cases")
-    if user.role is UserRole.BUSINESS and (
-        not test_case.is_active or "business" not in test_case.tags
-    ):
+    if not test_case.is_active:
+        raise TestCaseRunForbiddenError("Only active test cases can be run")
+    if user.role is UserRole.BUSINESS and "business" not in test_case.tags:
         raise TestCaseRunForbiddenError(
-            "Business users can only run active test cases tagged business"
+            "Business users can only run test cases tagged business"
         )
 
 

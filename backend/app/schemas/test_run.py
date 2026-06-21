@@ -3,14 +3,21 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.module import ModuleRead
+from app.schemas.test_case import TestCaseRead
 from app.models.test_run import TestRunStatus
 from app.models.test_run_step import TestRunStepStatus
 
 
 class TestRunCreate(BaseModel):
-    test_case_id: int
+    test_case_code: str = Field(min_length=1, max_length=100)
     environment: str = Field(default="local", min_length=1, max_length=128)
     parameters: dict[str, Any] = Field(default_factory=dict)
+
+
+class TestRunQueuedRead(BaseModel):
+    run_id: int
+    status: TestRunStatus
 
 
 class TestRunStepRead(BaseModel):
@@ -46,3 +53,12 @@ class TestRunRead(BaseModel):
     created_at: datetime
     updated_at: datetime
     steps: list[TestRunStepRead] = Field(default_factory=list)
+
+
+class TestRunReportRead(BaseModel):
+    test_run: TestRunRead
+    test_case: TestCaseRead
+    module: ModuleRead
+    steps: list[TestRunStepRead]
+    result: dict[str, Any] | None
+    error_message: str | None

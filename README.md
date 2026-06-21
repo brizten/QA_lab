@@ -188,6 +188,32 @@ curl.exe -X DELETE http://localhost:8000/api/test-cases/<test_case_id> `
 
 `input_schema` принимает только JSON object, а `tags` — JSON array of strings. Удаление test case с существующими test runs возвращает `400`.
 
+### Test Runs API
+
+Запуск сохраняет test run в статусе `QUEUED` и пока не отправляет Celery task. `input_schema` test case поддерживает два базовых формата: JSON Schema-like (`properties` + `required`) и объект правил полей, например `{"iin":{"type":"string","required":true}}`.
+
+```powershell
+# Queue a run (ADMIN, AUTOTESTER, QA, or BUSINESS)
+curl.exe -X POST http://localhost:8000/api/test-runs `
+  -H "Authorization: Bearer <access_token>" `
+  -H "Content-Type: application/json" `
+  -d '{"test_case_code":"cards.issue_virtual_card","environment":"test","parameters":{"iin":"990101300000","product_code":"VIRTUAL_CARD","currency":"KZT"}}'
+
+# List reports
+curl.exe http://localhost:8000/api/test-runs `
+  -H "Authorization: Bearer <access_token>"
+
+# Get a run
+curl.exe http://localhost:8000/api/test-runs/<run_id> `
+  -H "Authorization: Bearer <access_token>"
+
+# Get a report with the test case, module, steps, result and error_message
+curl.exe http://localhost:8000/api/test-runs/<run_id>/report `
+  -H "Authorization: Bearer <access_token>"
+```
+
+Проверяются обязательные параметры и типы `string`, `number`, `boolean`. `BUSINESS` может запускать только активные test cases с тегом `business`; `ADMIN`, `AUTOTESTER` и `QA` — активные test cases согласно своим RBAC-правам.
+
 ### Регистрация пользователя
 
 Новый пользователь получает роль `QA`.
