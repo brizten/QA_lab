@@ -118,8 +118,8 @@ API доступно по префиксу `/api`. Пароли сохраняю
 
 - `ADMIN` — полный доступ ко всем API и данным.
 - `AUTOTESTER` — создание модулей и test cases, запуск тестов и просмотр всех отчётов.
-- `QA` — просмотр активных test cases, их запуск и просмотр отчётов.
-- `BUSINESS` — просмотр и запуск только активных test cases с тегом `business`, а также просмотр только собственных отчётов.
+- `QA` — просмотр test cases, запуск активных test cases и просмотр отчётов.
+- `BUSINESS` — просмотр test cases, запуск только активных test cases с тегом `business`, а также просмотр только собственных отчётов.
 - `VIEWER` — только просмотр test cases и отчётов.
 
 Просмотр modules, test cases и отчётов доступен всем ролям. Создание, редактирование и удаление modules, а также создание test cases доступны `ADMIN` и `AUTOTESTER`; запуск test runs — `ADMIN`, `AUTOTESTER`, `QA` и `BUSINESS`. При недостатке прав API возвращает `403 Forbidden`.
@@ -155,6 +155,38 @@ curl.exe -X DELETE http://localhost:8000/api/modules/<module_id> `
 ```
 
 Поле `code` уникально. Удаление модуля, к которому привязаны test cases, возвращает `400`.
+
+### Test Cases API
+
+Во всех запросах ниже замените `<access_token>`, `<module_id>` и `<test_case_id>` на актуальные значения.
+
+```powershell
+# List with optional filters: module_id, tag, is_active
+curl.exe "http://localhost:8000/api/test-cases?module_id=<module_id>&tag=business&is_active=true" `
+  -H "Authorization: Bearer <access_token>"
+
+# Create (ADMIN or AUTOTESTER); owner_id is optional
+curl.exe -X POST http://localhost:8000/api/test-cases `
+  -H "Authorization: Bearer <access_token>" `
+  -H "Content-Type: application/json" `
+  -d '{"code":"PAYMENT-REFUND","name":"Payment refund","module_id":<module_id>,"input_schema":{"order_id":"string"},"tags":["business","payments"],"is_active":true}'
+
+# Get one
+curl.exe http://localhost:8000/api/test-cases/<test_case_id> `
+  -H "Authorization: Bearer <access_token>"
+
+# Update (ADMIN or AUTOTESTER)
+curl.exe -X PUT http://localhost:8000/api/test-cases/<test_case_id> `
+  -H "Authorization: Bearer <access_token>" `
+  -H "Content-Type: application/json" `
+  -d '{"tags":["business","smoke"],"is_active":false}'
+
+# Delete (ADMIN or AUTOTESTER)
+curl.exe -X DELETE http://localhost:8000/api/test-cases/<test_case_id> `
+  -H "Authorization: Bearer <access_token>"
+```
+
+`input_schema` принимает только JSON object, а `tags` — JSON array of strings. Удаление test case с существующими test runs возвращает `400`.
 
 ### Регистрация пользователя
 

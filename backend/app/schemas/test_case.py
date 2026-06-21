@@ -9,8 +9,21 @@ class TestCaseCreate(BaseModel):
     name: str = Field(min_length=1, max_length=255)
     description: str | None = None
     module_id: int
+    owner_id: int | None = Field(default=None, gt=0)
     input_schema: dict[str, Any] = Field(default_factory=dict)
     tags: list[str] = Field(default_factory=list)
+    is_active: bool = True
+
+
+class TestCaseUpdate(BaseModel):
+    code: str | None = Field(default=None, min_length=1, max_length=100)
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+    description: str | None = None
+    module_id: int | None = Field(default=None, gt=0)
+    owner_id: int | None = Field(default=None, gt=0)
+    input_schema: dict[str, Any] = Field(default_factory=dict)
+    tags: list[str] = Field(default_factory=list)
+    is_active: bool | None = None
 
 
 class TestCaseRead(BaseModel):

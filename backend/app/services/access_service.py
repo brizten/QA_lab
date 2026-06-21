@@ -14,20 +14,6 @@ class TestRunAccessForbiddenError(Exception):
     pass
 
 
-def list_visible_test_cases(db: Session, user: User) -> list[TestCase]:
-    test_cases = list(db.scalars(select(TestCase).order_by(TestCase.code)))
-
-    if user.role is UserRole.QA:
-        return [test_case for test_case in test_cases if test_case.is_active]
-    if user.role is UserRole.BUSINESS:
-        return [
-            test_case
-            for test_case in test_cases
-            if test_case.is_active and "business" in test_case.tags
-        ]
-    return test_cases
-
-
 def ensure_test_case_can_be_run(test_case: TestCase, user: User) -> None:
     if user.role is UserRole.QA and not test_case.is_active:
         raise TestCaseRunForbiddenError("QA can only run active test cases")
