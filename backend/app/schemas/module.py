@@ -9,6 +9,12 @@ class ModuleCreate(BaseModel):
     description: str | None = None
 
 
+class ModuleUpdate(BaseModel):
+    code: str | None = Field(default=None, min_length=1, max_length=100)
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+    description: str | None = None
+
+
 class ModuleRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

@@ -122,7 +122,39 @@ API доступно по префиксу `/api`. Пароли сохраняю
 - `BUSINESS` — просмотр и запуск только активных test cases с тегом `business`, а также просмотр только собственных отчётов.
 - `VIEWER` — только просмотр test cases и отчётов.
 
-`GET /api/modules` доступен `ADMIN` и `AUTOTESTER`. Создание модулей и test cases доступно `ADMIN` и `AUTOTESTER`; запуск test runs — `ADMIN`, `AUTOTESTER`, `QA` и `BUSINESS`. При недостатке прав API возвращает `403 Forbidden`.
+Просмотр modules, test cases и отчётов доступен всем ролям. Создание, редактирование и удаление modules, а также создание test cases доступны `ADMIN` и `AUTOTESTER`; запуск test runs — `ADMIN`, `AUTOTESTER`, `QA` и `BUSINESS`. При недостатке прав API возвращает `403 Forbidden`.
+
+### Modules API
+
+Во всех запросах ниже замените `<access_token>` на JWT, а `<module_id>` на идентификатор модуля.
+
+```powershell
+# List
+curl.exe http://localhost:8000/api/modules `
+  -H "Authorization: Bearer <access_token>"
+
+# Create (ADMIN or AUTOTESTER)
+curl.exe -X POST http://localhost:8000/api/modules `
+  -H "Authorization: Bearer <access_token>" `
+  -H "Content-Type: application/json" `
+  -d '{"code":"PAYMENTS","name":"Payments","description":"Payment test cases"}'
+
+# Get one
+curl.exe http://localhost:8000/api/modules/<module_id> `
+  -H "Authorization: Bearer <access_token>"
+
+# Update (ADMIN or AUTOTESTER)
+curl.exe -X PUT http://localhost:8000/api/modules/<module_id> `
+  -H "Authorization: Bearer <access_token>" `
+  -H "Content-Type: application/json" `
+  -d '{"name":"Payment services"}'
+
+# Delete (ADMIN or AUTOTESTER)
+curl.exe -X DELETE http://localhost:8000/api/modules/<module_id> `
+  -H "Authorization: Bearer <access_token>"
+```
+
+Поле `code` уникально. Удаление модуля, к которому привязаны test cases, возвращает `400`.
 
 ### Регистрация пользователя
 

@@ -13,7 +13,7 @@ from app.models.user import User, UserRole
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.api_prefix}/auth/login")
 DbSession = Annotated[Session, Depends(get_db)]
-MODULE_READ_ROLES = (UserRole.ADMIN, UserRole.AUTOTESTER)
+MODULE_READ_ROLES = tuple(UserRole)
 MODULE_WRITE_ROLES = (UserRole.ADMIN, UserRole.AUTOTESTER)
 TEST_CASE_READ_ROLES = tuple(UserRole)
 TEST_CASE_WRITE_ROLES = (UserRole.ADMIN, UserRole.AUTOTESTER)
