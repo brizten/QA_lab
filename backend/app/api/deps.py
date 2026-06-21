@@ -8,11 +8,22 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.security import decode_access_token
 from app.db.database import get_db
-from app.models.user import User
+from app.models.user import User, UserRole
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.api_prefix}/auth/login")
 DbSession = Annotated[Session, Depends(get_db)]
+MODULE_READ_ROLES = (UserRole.ADMIN, UserRole.AUTOTESTER)
+MODULE_WRITE_ROLES = (UserRole.ADMIN, UserRole.AUTOTESTER)
+TEST_CASE_READ_ROLES = tuple(UserRole)
+TEST_CASE_WRITE_ROLES = (UserRole.ADMIN, UserRole.AUTOTESTER)
+TEST_RUN_CREATE_ROLES = (
+    UserRole.ADMIN,
+    UserRole.AUTOTESTER,
+    UserRole.QA,
+    UserRole.BUSINESS,
+)
+REPORT_READ_ROLES = tuple(UserRole)
 
 
 def get_current_user(db: DbSession, token: Annotated[str, Depends(oauth2_scheme)]) -> User:
@@ -41,3 +52,17 @@ def get_current_active_user(current_user: Annotated[User, Depends(get_current_us
 
 
 CurrentUser = Annotated[User, Depends(get_current_active_user)]
+
+
+def require_roles(*roles: UserRole):
+    allowed_roles = frozenset(roles)
+
+    def role_checker(current_user: CurrentUser) -> User:
+        if current_user.role is UserRole.ADMIN or current_user.role in allowed_roles:
+            return current_user
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient permissions",
+        )
+
+    return role_checker

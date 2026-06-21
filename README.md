@@ -114,6 +114,16 @@ python -m scripts.create_admin
 
 API доступно по префиксу `/api`. Пароли сохраняются только в виде bcrypt-хеша, а для авторизации используется JWT access token.
 
+### Роли и доступ
+
+- `ADMIN` — полный доступ ко всем API и данным.
+- `AUTOTESTER` — создание модулей и test cases, запуск тестов и просмотр всех отчётов.
+- `QA` — просмотр активных test cases, их запуск и просмотр отчётов.
+- `BUSINESS` — просмотр и запуск только активных test cases с тегом `business`, а также просмотр только собственных отчётов.
+- `VIEWER` — только просмотр test cases и отчётов.
+
+`GET /api/modules` доступен `ADMIN` и `AUTOTESTER`. Создание модулей и test cases доступно `ADMIN` и `AUTOTESTER`; запуск test runs — `ADMIN`, `AUTOTESTER`, `QA` и `BUSINESS`. При недостатке прав API возвращает `403 Forbidden`.
+
 ### Регистрация пользователя
 
 Новый пользователь получает роль `QA`.
