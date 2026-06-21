@@ -4,7 +4,11 @@ from app.api.deps import DbSession
 from app.core.security import create_access_token
 from app.schemas.auth import LoginRequest, Token
 from app.schemas.user import UserCreate, UserRead
-from app.services.auth_service import authenticate_user, register_user
+from app.services.auth_service import (
+    UserAlreadyExistsError,
+    authenticate_user,
+    register_user,
+)
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -14,8 +18,8 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 def register(payload: UserCreate, db: DbSession) -> UserRead:
     try:
         return register_user(db, payload)
-    except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    except UserAlreadyExistsError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
 
 @router.post("/login", response_model=Token)

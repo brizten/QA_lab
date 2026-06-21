@@ -31,8 +31,8 @@ class User(Base):
     full_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     role: Mapped[UserRole] = mapped_column(
         SqlEnum(UserRole, name="user_role"),
-        default=UserRole.VIEWER,
-        server_default=UserRole.VIEWER.value,
+        default=UserRole.QA,
+        server_default=UserRole.QA.value,
         nullable=False,
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)

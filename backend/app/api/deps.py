@@ -11,7 +11,7 @@ from app.db.database import get_db
 from app.models.user import User
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.api_v1_prefix}/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.api_prefix}/auth/login")
 DbSession = Annotated[Session, Depends(get_db)]
 
 

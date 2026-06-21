@@ -14,7 +14,7 @@ class Settings(BaseSettings):
 
     app_name: str = "Autotest Platform"
     app_env: str = "local"
-    api_v1_prefix: str = "/api/v1"
+    api_prefix: str = "/api"
 
     postgres_db: str = "autotest_platform"
     postgres_user: str = "autotest_user"

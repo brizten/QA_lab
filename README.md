@@ -100,4 +100,35 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 celery -A app.workers.celery_app.celery_app worker --loglevel=INFO --pool=solo
 ```
 
-API доступно по префиксу `/api/v1`. Сначала зарегистрируйте пользователя через `POST /api/v1/auth/register`, затем получите JWT через `POST /api/v1/auth/login` и передавайте токен в заголовке `Authorization: Bearer <token>`.
+## Аутентификация API
+
+API доступно по префиксу `/api`. Пароли сохраняются только в виде bcrypt-хеша, а для авторизации используется JWT access token.
+
+### Регистрация пользователя
+
+Новый пользователь получает роль `QA`.
+
+```powershell
+curl.exe -X POST http://localhost:8000/api/auth/register `
+  -H "Content-Type: application/json" `
+  -d '{"email":"qa@example.com","password":"strong_password","full_name":"QA User"}'
+```
+
+### Получение access token
+
+```powershell
+curl.exe -X POST http://localhost:8000/api/auth/login `
+  -H "Content-Type: application/json" `
+  -d '{"email":"qa@example.com","password":"strong_password"}'
+```
+
+Ответ содержит `access_token` и `token_type` со значением `bearer`.
+
+### Текущий пользователь
+
+Передайте токен из ответа login в заголовке `Authorization`:
+
+```powershell
+curl.exe http://localhost:8000/api/users/me `
+  -H "Authorization: Bearer <access_token>"
+```
