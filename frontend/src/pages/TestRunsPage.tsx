@@ -1,11 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
+import { getTestRunReport, getTestRuns, TestRun } from "../api/testRuns";
 import StatusBadge from "../components/StatusBadge";
-import { getTestRuns, TestRun } from "../api/testRuns";
+
+interface EnrichedTestRun extends TestRun {
+  test_case_code?: string;
+  started_by_label?: string;
+}
 
 export default function TestRunsPage() {
-  const [runs, setRuns] = useState<TestRun[]>([]);
+  const [runs, setRuns] = useState<EnrichedTestRun[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -13,7 +18,23 @@ export default function TestRunsPage() {
     setIsLoading(true);
     setError(null);
     getTestRuns()
-      .then(setRuns)
+      .then(async (items) => {
+        const enrichedRuns = await Promise.all(
+          items.map(async (run) => {
+            try {
+              const report = await getTestRunReport(run.id);
+              return {
+                ...run,
+                test_case_code: report.test_case.code,
+                started_by_label: report.started_by.full_name || report.started_by.email,
+              };
+            } catch {
+              return run;
+            }
+          }),
+        );
+        setRuns(enrichedRuns);
+      })
       .catch(() => setError("Could not load test runs."))
       .finally(() => setIsLoading(false));
   }
@@ -39,10 +60,12 @@ export default function TestRunsPage() {
           <thead>
             <tr>
               <th>ID</th>
-              <th>Status</th>
+              <th>Test Case</th>
               <th>Environment</th>
+              <th>Status</th>
+              <th>Started By</th>
+              <th>Created At</th>
               <th>Duration</th>
-              <th>Created</th>
               <th>Report</th>
             </tr>
           </thead>
@@ -50,12 +73,14 @@ export default function TestRunsPage() {
             {runs.map((run) => (
               <tr key={run.id}>
                 <td>#{run.id}</td>
+                <td className="code">{run.test_case_code || `#${run.test_case_id}`}</td>
+                <td>{run.environment}</td>
                 <td>
                   <StatusBadge status={run.status} />
                 </td>
-                <td>{run.environment}</td>
-                <td>{formatDuration(run.duration_ms)}</td>
+                <td>{run.started_by_label || `#${run.started_by_user_id}`}</td>
                 <td>{formatDate(run.created_at)}</td>
+                <td>{formatDuration(run.duration_ms)}</td>
                 <td>
                   <Link to={`/test-runs/${run.id}/report`}>Open</Link>
                 </td>

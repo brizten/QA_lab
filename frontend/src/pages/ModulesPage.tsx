@@ -27,6 +27,7 @@ export default function ModulesPage() {
         <table>
           <thead>
             <tr>
+              <th>ID</th>
               <th>Code</th>
               <th>Name</th>
               <th>Description</th>
@@ -35,6 +36,7 @@ export default function ModulesPage() {
           <tbody>
             {modules.map((module) => (
               <tr key={module.id}>
+                <td>#{module.id}</td>
                 <td className="code">{module.code}</td>
                 <td>{module.name}</td>
                 <td>{module.description || "-"}</td>

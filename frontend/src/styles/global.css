@@ -470,6 +470,18 @@ textarea:focus {
   overflow-wrap: anywhere;
 }
 
+.json-details summary {
+  cursor: pointer;
+  color: #2358d4;
+  font-weight: 800;
+}
+
+.json-details pre {
+  margin-top: 8px;
+  max-width: 420px;
+  max-height: 260px;
+}
+
 @media (max-width: 1100px) {
   .metrics-grid,
   .report-summary {

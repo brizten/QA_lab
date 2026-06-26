@@ -151,6 +151,8 @@ export default function TestRunReportPage() {
                     <th>Status</th>
                     <th>Duration</th>
                     <th>Error</th>
+                    <th>Request</th>
+                    <th>Response</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -163,6 +165,12 @@ export default function TestRunReportPage() {
                       </td>
                       <td>{formatDuration(step.duration_ms)}</td>
                       <td>{step.error_message || "-"}</td>
+                      <td>
+                        <JsonDetails value={step.request_json} />
+                      </td>
+                      <td>
+                        <JsonDetails value={step.response_json} />
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -186,6 +194,19 @@ function JsonPanel({ title, value }: { title: string; value: unknown }) {
       <h2>{title}</h2>
       <pre>{JSON.stringify(value, null, 2)}</pre>
     </section>
+  );
+}
+
+function JsonDetails({ value }: { value: unknown }) {
+  if (value === null || value === undefined) {
+    return <span className="muted">-</span>;
+  }
+
+  return (
+    <details className="json-details">
+      <summary>JSON</summary>
+      <pre>{JSON.stringify(value, null, 2)}</pre>
+    </details>
   );
 }
 

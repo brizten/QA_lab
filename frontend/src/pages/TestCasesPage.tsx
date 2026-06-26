@@ -77,6 +77,7 @@ export default function TestCasesPage() {
         <table>
           <thead>
             <tr>
+              <th>ID</th>
               <th>Code</th>
               <th>Name</th>
               <th>Module</th>
@@ -87,6 +88,7 @@ export default function TestCasesPage() {
           <tbody>
             {testCases.map((testCase) => (
               <tr key={testCase.id}>
+                <td>#{testCase.id}</td>
                 <td className="code">{testCase.code}</td>
                 <td>{testCase.name}</td>
                 <td>{modules.find((module) => module.id === testCase.module_id)?.code || testCase.module_id}</td>

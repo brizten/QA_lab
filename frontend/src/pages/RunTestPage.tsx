@@ -4,6 +4,8 @@ import { Link } from "react-router-dom";
 import { getTestCases, InputSchema, TestCase } from "../api/testCases";
 import { queueTestRun } from "../api/testRuns";
 
+const environments = ["dev", "test", "stage"];
+
 export default function RunTestPage() {
   const [testCases, setTestCases] = useState<TestCase[]>([]);
   const [selectedCode, setSelectedCode] = useState("");
@@ -90,11 +92,17 @@ export default function RunTestPage() {
 
         <label>
           Environment
-          <input
+          <select
             value={environment}
             onChange={(event) => setEnvironment(event.target.value)}
             required
-          />
+          >
+            {environments.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
+          </select>
         </label>
 
         {selectedTestCase ? (
