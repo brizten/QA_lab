@@ -268,10 +268,57 @@ curl.exe http://localhost:8000/api/test-runs `
 curl.exe http://localhost:8000/api/test-runs/<run_id> `
   -H "Authorization: Bearer <access_token>"
 
-# Get a report with the test case, module, steps, result and error_message
+# Get a report with run, test_case, module, started_by and sorted steps
 curl.exe http://localhost:8000/api/test-runs/<run_id>/report `
   -H "Authorization: Bearer <access_token>"
 ```
+
+Report endpoint возвращает компактную структуру:
+
+```json
+{
+  "run": {
+    "id": 1,
+    "status": "PASSED",
+    "environment": "test",
+    "parameters": {},
+    "result": {},
+    "error_message": null,
+    "started_at": "2026-06-27T10:00:00Z",
+    "finished_at": "2026-06-27T10:00:01Z",
+    "duration_ms": 1000
+  },
+  "test_case": {
+    "id": 1,
+    "code": "cards.issue_virtual_card",
+    "name": "Issue virtual card",
+    "tags": ["smoke", "business", "cards"]
+  },
+  "module": {
+    "id": 1,
+    "code": "cards",
+    "name": "Cards"
+  },
+  "started_by": {
+    "id": 1,
+    "email": "admin@local.com",
+    "full_name": "Local Admin"
+  },
+  "steps": [
+    {
+      "id": 1,
+      "name": "Validate input parameters",
+      "status": "PASSED",
+      "duration_ms": 100,
+      "error_message": null,
+      "request_json": null,
+      "response_json": null
+    }
+  ]
+}
+```
+
+Steps в report отсортированы по `id`. `ADMIN`, `AUTOTESTER`, `QA` и `VIEWER` могут смотреть все reports; `BUSINESS` может смотреть только свои test runs.
 
 Проверяются обязательные параметры и типы `string`, `number`, `boolean`. Если runner-класс не найден по `TestCase.code`, run завершается как `BROKEN` с понятным `error_message`. Если тест бросает `AssertionError`, run завершается как `FAILED`; если возникает неожиданная ошибка — как `BROKEN`. В example tests параметр `"force_fail": true` специально бросает `AssertionError` и завершает run со статусом `FAILED`. `BUSINESS` может запускать только активные test cases с тегом `business`; `ADMIN`, `AUTOTESTER` и `QA` — активные test cases согласно своим RBAC-правам.
 

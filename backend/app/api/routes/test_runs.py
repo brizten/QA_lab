@@ -44,12 +44,11 @@ def get_test_run_report(
     if test_run is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Test run not found")
     return TestRunReportRead(
-        test_run=test_run,
+        run=test_run,
         test_case=test_run.test_case,
         module=test_run.test_case.module,
-        steps=test_run.steps,
-        result=test_run.result,
-        error_message=test_run.error_message,
+        started_by=test_run.started_by_user,
+        steps=sorted(test_run.steps, key=lambda step: step.id),
     )
 
 
