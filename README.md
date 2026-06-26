@@ -128,6 +128,43 @@ python -m scripts.create_admin
 
 Скрипт создаёт `admin@local.com` с паролем `admin` и ролью `ADMIN`. При повторном запуске существующий пользователь не изменяется и не дублируется.
 
+### Создание demo-данных
+
+Из директории `backend/` можно создать локальные demo-данные:
+
+```powershell
+python -m scripts.seed_demo_data
+```
+
+Скрипт создаёт admin user `admin@local.com` / `admin`, если его ещё нет; если admin уже существует, он приводится к активной роли `ADMIN` с demo-паролем `admin`. Также создаются modules `cards` и `k2`, а также активные test cases `cards.issue_virtual_card` и `k2.create_payment`. Повторный запуск не создаёт дубли и обновляет demo modules/test cases до ожидаемых значений.
+
+После seed можно проверить основной flow:
+
+```powershell
+# Login as admin
+curl.exe -X POST http://localhost:8000/api/auth/login `
+  -H "Content-Type: application/json" `
+  -d '{"email":"admin@local.com","password":"admin"}'
+
+# List modules
+curl.exe http://localhost:8000/api/modules `
+  -H "Authorization: Bearer <access_token>"
+
+# List seeded test cases
+curl.exe http://localhost:8000/api/test-cases `
+  -H "Authorization: Bearer <access_token>"
+
+# Queue seeded cards runner
+curl.exe -X POST http://localhost:8000/api/test-runs `
+  -H "Authorization: Bearer <access_token>" `
+  -H "Content-Type: application/json" `
+  -d '{"test_case_code":"cards.issue_virtual_card","environment":"test","parameters":{"iin":"990101300000","product_code":"VIRTUAL_CARD","currency":"KZT"}}'
+
+# Open report
+curl.exe http://localhost:8000/api/test-runs/<run_id>/report `
+  -H "Authorization: Bearer <access_token>"
+```
+
 ## Аутентификация API
 
 API доступно по префиксу `/api`. Пароли сохраняются только в виде bcrypt-хеша, а для авторизации используется JWT access token.

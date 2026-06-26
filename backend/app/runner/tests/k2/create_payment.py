@@ -10,36 +10,36 @@ class CreatePaymentTest(BaseTestCase):
     module = "k2"
     input_schema = {
         "type": "object",
-        "required": ["amount", "currency", "receiver"],
+        "required": ["iin", "amount", "currency"],
         "properties": {
+            "iin": {"type": "string"},
             "amount": {"type": "number"},
             "currency": {"type": "string"},
-            "receiver": {"type": "string"},
             "force_fail": {"type": "boolean"},
         },
     }
 
     def run(self, context: TestContext) -> dict[str, Any]:
         with context.step("Validate input parameters", request_json=context.params) as step:
+            assert context.params.get("iin"), "iin is required"
             amount = context.params.get("amount")
             assert isinstance(amount, (int, float)) and amount > 0, "amount must be positive"
             assert context.params.get("currency"), "currency is required"
-            assert context.params.get("receiver"), "receiver is required"
             step.save_response_json({"message": "Input parameters are valid"})
 
         with context.step(
             "Mock create payment",
             request_json={
+                "iin": context.params["iin"],
                 "amount": context.params["amount"],
                 "currency": context.params["currency"],
-                "receiver": context.params["receiver"],
             },
         ) as step:
             payment = {
                 "payment_id": f"payment-{context.test_run_id}",
+                "iin": context.params["iin"],
                 "amount": context.params["amount"],
                 "currency": context.params["currency"],
-                "receiver": context.params["receiver"],
                 "status": "CREATED",
             }
             step.save_response_json(payment)
