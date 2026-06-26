@@ -2,18 +2,14 @@
 
 Локальное окружение проекта поднимается через Docker Compose и включает PostgreSQL 16, Redis 7 и pgAdmin 4.
 
-## Запуск Docker Compose
+## Docker Compose
 
-При необходимости создайте локальный `.env` из примера:
+### Запуск только инфраструктуры
 
-```bash
-cp .env.example .env
-```
-
-Запустите контейнеры:
+Для локальной backend-разработки можно поднять только PostgreSQL, Redis и pgAdmin:
 
 ```bash
-docker compose up -d
+docker compose up -d postgres redis pgadmin
 ```
 
 Проверьте, что сервисы запущены:
@@ -21,6 +17,36 @@ docker compose up -d
 ```bash
 docker ps
 ```
+
+### Запуск всего проекта через Docker Compose
+
+Команда ниже поднимает PostgreSQL, Redis, pgAdmin, FastAPI backend, Celery worker и Vite frontend:
+
+```bash
+docker compose up -d --build
+```
+
+Если хотите явно отделить docker-переменные от локального `.env`, создайте файл из примера:
+
+```powershell
+Copy-Item .env.docker.example .env.docker
+docker compose --env-file .env.docker up -d --build
+```
+
+Внутри Docker Compose backend и worker всегда подключаются к PostgreSQL по host `postgres`, а к Redis по host `redis`. Поэтому локальный `.env` с `POSTGRES_HOST=localhost` не ломает docker setup.
+
+После первого запуска нового окружения примените миграции и при необходимости создайте demo-данные:
+
+```bash
+docker compose exec backend alembic upgrade head
+docker compose exec backend python -m scripts.seed_demo_data
+```
+
+Локальные URL:
+
+- Backend API: `http://localhost:8000`
+- Frontend: `http://localhost:5173`
+- pgAdmin: `http://localhost:5050`
 
 ## pgAdmin
 
@@ -57,9 +83,15 @@ Password: autotest_password
 
 Backend находится в директории `backend/` и рассчитан на Python 3.12+.
 
-### Подготовка окружения
+### Запуск backend локально с Docker DB
 
-Перед запуском должны быть доступны PostgreSQL и Redis из Docker Compose. Создайте виртуальное окружение и установите зависимости:
+Поднимите Docker-инфраструктуру:
+
+```powershell
+docker compose up -d postgres redis pgadmin
+```
+
+Затем создайте виртуальное окружение и установите зависимости:
 
 ```powershell
 cd backend
@@ -67,6 +99,13 @@ py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 Copy-Item .env.example .env
+```
+
+Для локального backend `.env` должен использовать host `localhost`:
+
+```text
+POSTGRES_HOST=localhost
+REDIS_HOST=localhost
 ```
 
 Примените существующие миграции:
@@ -165,10 +204,6 @@ curl.exe http://localhost:8000/api/test-runs/<run_id>/report `
   -H "Authorization: Bearer <access_token>"
 ```
 
-## Аутентификация API
-
-API доступно по префиксу `/api`. Пароли сохраняются только в виде bcrypt-хеша, а для авторизации используется JWT access token.
-
 ## Frontend
 
 Frontend находится в директории `frontend/` и использует React, Vite, TypeScript, React Router и Axios. Перед запуском убедитесь, что backend доступен на `http://localhost:8000`.
@@ -184,6 +219,10 @@ npm run dev
 ```powershell
 Copy-Item .env.example .env
 ```
+
+## Аутентификация API
+
+API доступно по префиксу `/api`. Пароли сохраняются только в виде bcrypt-хеша, а для авторизации используется JWT access token.
 
 ### Роли и доступ
 
