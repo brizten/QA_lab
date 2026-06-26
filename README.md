@@ -97,7 +97,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 В отдельном терминале из директории `backend/`:
 
 ```powershell
-celery -A app.workers.celery_app.celery_app worker --loglevel=INFO --pool=solo
+celery -A app.workers.celery_app worker --loglevel=info
 ```
 
 ### Создание локального администратора
@@ -190,7 +190,7 @@ curl.exe -X DELETE http://localhost:8000/api/test-cases/<test_case_id> `
 
 ### Test Runs API
 
-Запуск сохраняет test run в статусе `QUEUED` и пока не отправляет Celery task. `input_schema` test case поддерживает два базовых формата: JSON Schema-like (`properties` + `required`) и объект правил полей, например `{"iin":{"type":"string","required":true}}`.
+Запуск сохраняет test run в статусе `QUEUED` и отправляет Celery task `run_test_case(test_run_id)` в Redis. Worker переводит run в `RUNNING`, создаёт mock steps, затем завершает run со статусом `PASSED`, `FAILED` или `BROKEN`. `input_schema` test case поддерживает два базовых формата: JSON Schema-like (`properties` + `required`) и объект правил полей, например `{"iin":{"type":"string","required":true}}`.
 
 ```powershell
 # Queue a run (ADMIN, AUTOTESTER, QA, or BUSINESS)
@@ -198,6 +198,12 @@ curl.exe -X POST http://localhost:8000/api/test-runs `
   -H "Authorization: Bearer <access_token>" `
   -H "Content-Type: application/json" `
   -d '{"test_case_code":"cards.issue_virtual_card","environment":"test","parameters":{"iin":"990101300000","product_code":"VIRTUAL_CARD","currency":"KZT"}}'
+
+# Queue a forced failed mock run
+curl.exe -X POST http://localhost:8000/api/test-runs `
+  -H "Authorization: Bearer <access_token>" `
+  -H "Content-Type: application/json" `
+  -d '{"test_case_code":"cards.issue_virtual_card","environment":"test","parameters":{"iin":"990101300000","force_fail":true}}'
 
 # List reports
 curl.exe http://localhost:8000/api/test-runs `
@@ -212,7 +218,7 @@ curl.exe http://localhost:8000/api/test-runs/<run_id>/report `
   -H "Authorization: Bearer <access_token>"
 ```
 
-Проверяются обязательные параметры и типы `string`, `number`, `boolean`. `BUSINESS` может запускать только активные test cases с тегом `business`; `ADMIN`, `AUTOTESTER` и `QA` — активные test cases согласно своим RBAC-правам.
+Проверяются обязательные параметры и типы `string`, `number`, `boolean`. Если в `parameters` передать `"force_fail": true`, worker завершит run со статусом `FAILED` и `error_message` со значением `Forced failure for testing`. `BUSINESS` может запускать только активные test cases с тегом `business`; `ADMIN`, `AUTOTESTER` и `QA` — активные test cases согласно своим RBAC-правам.
 
 ### Регистрация пользователя
 

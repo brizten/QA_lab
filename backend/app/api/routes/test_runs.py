@@ -17,6 +17,7 @@ from app.services.test_run_service import (
     TestRunParametersValidationError,
     create_test_run,
 )
+from app.workers.tasks import run_test_case
 
 
 router = APIRouter(prefix="/test-runs", tags=["test-runs"])
@@ -84,4 +85,5 @@ def queue_test_run(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail={"message": str(exc), "errors": exc.errors},
         ) from exc
+    run_test_case.delay(test_run.id)
     return TestRunQueuedRead(run_id=test_run.id, status=test_run.status)

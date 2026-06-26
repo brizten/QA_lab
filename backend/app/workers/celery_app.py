@@ -9,6 +9,7 @@ celery_app = Celery(
     backend=settings.celery_result_backend,
     include=["app.workers.tasks"],
 )
+app = celery_app
 
 celery_app.conf.update(
     task_track_started=True,
