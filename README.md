@@ -169,6 +169,22 @@ curl.exe http://localhost:8000/api/test-runs/<run_id>/report `
 
 API доступно по префиксу `/api`. Пароли сохраняются только в виде bcrypt-хеша, а для авторизации используется JWT access token.
 
+## Frontend
+
+Frontend находится в директории `frontend/` и использует React, Vite, TypeScript, React Router и Axios. Перед запуском убедитесь, что backend доступен на `http://localhost:8000`.
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+Локальный URL по умолчанию: `http://127.0.0.1:5173`. API base URL задаётся в `frontend/.env`:
+
+```powershell
+Copy-Item .env.example .env
+```
+
 ### Роли и доступ
 
 - `ADMIN` — полный доступ ко всем API и данным.
