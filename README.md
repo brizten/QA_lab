@@ -100,6 +100,24 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 celery -A app.workers.celery_app worker --loglevel=info
 ```
 
+### Runner contract
+
+Автотесты подключаются через runner-классы в `backend/app/runner/`, а не через отдельные endpoint-ы. Один endpoint `POST /api/test-runs` запускает любой test case по `code`: Celery берёт `TestCase.code` из PostgreSQL, ищет такой же код в registry и вызывает `test.run(context)`.
+
+Минимальный контракт:
+
+- `BaseTestCase`: `code`, `name`, `module`, `input_schema`, метод `run(context)`.
+- `TestContext`: `test_run_id`, `params`, `environment`, `db` session и `step(name)` context manager.
+- `context.step(...)`: создаёт `TestRunStep`, сохраняет status, `request_json`, `response_json`, `error_message` и duration.
+- `registry`: регистрирует test classes и отдаёт runner по `get_test_by_code(code)`.
+
+Встроенные примеры:
+
+- `cards.issue_virtual_card` — шаги создания клиента и выпуска виртуальной карты.
+- `k2.create_payment` — шаги создания платежа и проверки статуса.
+
+Чтобы добавить новый автотест, создайте класс-наследник `BaseTestCase`, реализуйте `run(context)` через `with context.step("Step name") as step:`, зарегистрируйте класс в `backend/app/runner/registry.py` и создайте `TestCase` в БД с таким же `code`.
+
 ### Создание локального администратора
 
 Из директории `backend/` создайте локального администратора командой:
@@ -190,7 +208,7 @@ curl.exe -X DELETE http://localhost:8000/api/test-cases/<test_case_id> `
 
 ### Test Runs API
 
-Запуск сохраняет test run в статусе `QUEUED` и отправляет Celery task `run_test_case(test_run_id)` в Redis. Worker переводит run в `RUNNING`, создаёт mock steps, затем завершает run со статусом `PASSED`, `FAILED` или `BROKEN`. `input_schema` test case поддерживает два базовых формата: JSON Schema-like (`properties` + `required`) и объект правил полей, например `{"iin":{"type":"string","required":true}}`.
+Запуск сохраняет test run в статусе `QUEUED` и отправляет Celery task `run_test_case(test_run_id)` в Redis. Worker переводит run в `RUNNING`, находит runner-класс по `TestCase.code`, запускает `test.run(context)` и завершает run со статусом `PASSED`, `FAILED` или `BROKEN`. `input_schema` test case поддерживает два базовых формата: JSON Schema-like (`properties` + `required`) и объект правил полей, например `{"iin":{"type":"string","required":true}}`.
 
 ```powershell
 # Queue a run (ADMIN, AUTOTESTER, QA, or BUSINESS)
@@ -203,7 +221,7 @@ curl.exe -X POST http://localhost:8000/api/test-runs `
 curl.exe -X POST http://localhost:8000/api/test-runs `
   -H "Authorization: Bearer <access_token>" `
   -H "Content-Type: application/json" `
-  -d '{"test_case_code":"cards.issue_virtual_card","environment":"test","parameters":{"iin":"990101300000","force_fail":true}}'
+  -d '{"test_case_code":"cards.issue_virtual_card","environment":"test","parameters":{"iin":"990101300000","product_code":"VIRTUAL_CARD","currency":"KZT","force_fail":true}}'
 
 # List reports
 curl.exe http://localhost:8000/api/test-runs `
@@ -218,7 +236,7 @@ curl.exe http://localhost:8000/api/test-runs/<run_id>/report `
   -H "Authorization: Bearer <access_token>"
 ```
 
-Проверяются обязательные параметры и типы `string`, `number`, `boolean`. Если в `parameters` передать `"force_fail": true`, worker завершит run со статусом `FAILED` и `error_message` со значением `Forced failure for testing`. `BUSINESS` может запускать только активные test cases с тегом `business`; `ADMIN`, `AUTOTESTER` и `QA` — активные test cases согласно своим RBAC-правам.
+Проверяются обязательные параметры и типы `string`, `number`, `boolean`. Если runner-класс не найден по `TestCase.code`, run завершается как `BROKEN` с понятным `error_message`. Если тест бросает `AssertionError`, run завершается как `FAILED`; если возникает неожиданная ошибка — как `BROKEN`. В example tests параметр `"force_fail": true` специально бросает `AssertionError` и завершает run со статусом `FAILED`. `BUSINESS` может запускать только активные test cases с тегом `business`; `ADMIN`, `AUTOTESTER` и `QA` — активные test cases согласно своим RBAC-правам.
 
 ### Регистрация пользователя
 
