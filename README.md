@@ -131,6 +131,17 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 Проверка доступности API: `http://localhost:8000/health`.
 
+### Backend tests
+
+Тесты находятся в `backend/tests/` и используют отдельную in-memory SQLite базу, поэтому основную PostgreSQL БД они не меняют.
+
+Из директории `backend/`:
+
+```powershell
+pip install -r requirements-test.txt
+pytest
+```
+
 ### Запуск Celery worker
 
 В отдельном терминале из директории `backend/`:
