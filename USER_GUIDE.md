@@ -45,6 +45,17 @@ User -> Web UI/API -> TestRun QUEUED -> Celery Worker -> Runner -> Report
 6. Runner выполняет steps и сохраняет request/response/error details.
 7. Report endpoint возвращает итоговый статус, результат и список steps.
 
+### Текущие demo test cases
+
+После запуска `python -m scripts.seed_demo_data` в базе создаются только эти demo test cases, и именно они сейчас зарегистрированы в runner registry:
+
+| Test case code | Module | Runner file |
+| --- | --- | --- |
+| `cards.issue_virtual_card` | `cards` | `backend/app/runner/tests/cards/issue_virtual_card.py` |
+| `k2.create_payment` | `k2` | `backend/app/runner/tests/k2/create_payment.py` |
+
+Другие коды в этом документе, например `crm.update_client_phone`, используются как примеры naming convention и примеры добавления нового теста. Они начнут работать только после того, как autotester создаст module/test case metadata, добавит runner file и зарегистрирует runner в `backend/app/runner/registry.py`.
+
 ## 2. Main Concepts
 
 | Concept | Что это значит |
@@ -207,13 +218,15 @@ Test cases группируются по modules. Module должен отраж
 module.action_expected_result
 ```
 
-Хорошие примеры:
+Хорошие примеры naming convention:
 
 - `cards.issue_virtual_card`
 - `cards.block_card`
 - `k2.create_payment`
 - `aml.archive_client`
 - `crm.update_client_phone`
+
+Из этого списка в seed data и registry текущего проекта реально доступны `cards.issue_virtual_card` и `k2.create_payment`. Остальные примеры показывают, как лучше называть будущие test cases.
 
 Плохие примеры:
 
@@ -392,7 +405,7 @@ Business-friendly interpretation:
 
 ## 9. How To Use The Platform As Developer
 
-Developer использует платформу для быстрой проверки своего модуля перед merge или release.
+Developer использует платформу для быстрой проверки своего модуля перед merge или release. В текущем RBAC нет отдельной роли `DEVELOPER`: developer работает под выданной ролью `QA`, `AUTOTESTER`, `VIEWER` или `ADMIN`.
 
 Developer может:
 
@@ -401,6 +414,8 @@ Developer может:
 - запустить smoke tests;
 - открыть report;
 - использовать failed step, `error_message`, `request_json`, `response_json` для отладки.
+
+Запускать tests developer сможет только если его аккаунт имеет роль `ADMIN`, `AUTOTESTER` или `QA`. Если аккаунт имеет роль `VIEWER`, developer сможет только смотреть test cases и reports.
 
 Developer не должен:
 
@@ -440,11 +455,13 @@ Autotester отвечает за создание и поддержку авто
 
 | Где | Поле | Пример |
 | --- | --- | --- |
-| Runner class | `code` | `crm.update_client_phone` |
-| TestCase in DB | `code` | `crm.update_client_phone` |
-| Request to run | `test_case_code` | `crm.update_client_phone` |
+| Runner class | `code` | `cards.issue_virtual_card` |
+| TestCase in DB | `code` | `cards.issue_virtual_card` |
+| Request to run | `test_case_code` | `cards.issue_virtual_card` |
 
 Если эти значения не совпадают, worker не найдет runner и завершит run как `BROKEN`.
+
+Для нового теста принцип такой же: если autotester добавляет `crm.update_client_phone`, это значение должно совпадать в runner class, TestCase metadata и request body.
 
 ### Что проверять перед публикацией test case
 
@@ -692,7 +709,7 @@ def register_builtin_tests() -> None:
 Report доступен по endpoint:
 
 ```text
-GET /api/test-runs/{id}/report
+GET /api/test-runs/{test_run_id}/report
 ```
 
 Report содержит:
