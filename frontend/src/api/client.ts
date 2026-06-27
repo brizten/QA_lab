@@ -22,6 +22,26 @@ export function clearAccessToken(): void {
   localStorage.removeItem(TOKEN_STORAGE_KEY);
 }
 
+export function getApiErrorMessage(error: unknown, fallback: string): string {
+  if (!axios.isAxiosError(error)) {
+    return fallback;
+  }
+
+  const detail = (error.response?.data as { detail?: unknown } | undefined)?.detail;
+  if (typeof detail === "string") {
+    return detail;
+  }
+  if (isApiErrorDetail(detail)) {
+    const message = typeof detail.message === "string" ? detail.message : "";
+    const errors = Array.isArray(detail.errors)
+      ? detail.errors.filter((item): item is string => typeof item === "string").join("; ")
+      : "";
+    return [message, errors].filter(Boolean).join(": ") || fallback;
+  }
+
+  return fallback;
+}
+
 apiClient.interceptors.request.use((config) => {
   const token = getAccessToken();
   if (token) {
@@ -39,3 +59,7 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   },
 );
+
+function isApiErrorDetail(value: unknown): value is { message?: unknown; errors?: unknown } {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}

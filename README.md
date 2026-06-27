@@ -2,6 +2,93 @@
 
 Локальное окружение проекта поднимается через Docker Compose и включает PostgreSQL 16, Redis 7 и pgAdmin 4.
 
+## Final Quick Start
+
+Ниже самый короткий путь для локального запуска backend и frontend с Docker-инфраструктурой:
+
+```powershell
+# 1. Start infrastructure
+docker compose up -d postgres redis pgadmin
+
+# 2. Open backend
+cd backend
+
+# 3. Create virtual environment
+python -m venv .venv
+
+# 4. Activate virtual environment
+.\.venv\Scripts\Activate.ps1
+
+# 5. Install backend dependencies
+pip install -r requirements.txt
+
+# 6. Apply migrations
+alembic upgrade head
+
+# 7. Seed demo data
+python -m scripts.seed_demo_data
+
+# 8. Start FastAPI
+uvicorn app.main:app --reload
+```
+
+Если на Windows уже запущен локальный PostgreSQL и он занимает `localhost:5432`, локальный backend может подключиться не к Docker PostgreSQL, а к этому локальному сервису. В таком случае остановите локальный PostgreSQL на время разработки или запускайте backend через Docker Compose.
+
+В отдельном терминале запустите Celery worker:
+
+```powershell
+cd backend
+.\.venv\Scripts\Activate.ps1
+
+# 9. Start Celery worker
+celery -A app.workers.celery_app worker --loglevel=info
+```
+
+В третьем терминале запустите frontend:
+
+```powershell
+# 10. Open frontend
+cd frontend
+
+# 11. Install frontend dependencies
+npm install
+
+# 12. Start Vite
+npm run dev
+```
+
+### Test users
+
+Seed script создаёт demo admin:
+
+```text
+Email: admin@local.com
+Password: admin
+Role: ADMIN
+```
+
+Новые пользователи, созданные через `POST /api/auth/register`, получают роль `QA` по умолчанию.
+
+### URLs
+
+- Swagger URL: `http://localhost:8000/docs`
+- Backend health: `http://localhost:8000/health`
+- pgAdmin URL: `http://localhost:5050`
+- Frontend URL: `http://localhost:5173`
+
+### Example test run request
+
+```powershell
+$login = curl.exe -s -X POST http://localhost:8000/api/auth/login `
+  -H "Content-Type: application/json" `
+  -d '{"email":"admin@local.com","password":"admin"}' | ConvertFrom-Json
+
+curl.exe -X POST http://localhost:8000/api/test-runs `
+  -H "Authorization: Bearer $($login.access_token)" `
+  -H "Content-Type: application/json" `
+  -d '{"test_case_code":"cards.issue_virtual_card","environment":"test","parameters":{"iin":"990101300000","product_code":"VIRTUAL_CARD","currency":"KZT"}}'
+```
+
 ## Docker Compose
 
 ### Запуск только инфраструктуры

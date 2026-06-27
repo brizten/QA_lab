@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
+import { getApiErrorMessage } from "../api/client";
 import { getTestCases, InputSchema, TestCase } from "../api/testCases";
 import { queueTestRun } from "../api/testRuns";
 
@@ -59,7 +60,7 @@ export default function RunTestPage() {
       if (caughtError instanceof SyntaxError) {
         setError("Parameters must be valid JSON.");
       } else {
-        setError("Could not queue test run.");
+        setError(getApiErrorMessage(caughtError, "Could not queue test run."));
       }
     } finally {
       setIsSubmitting(false);
