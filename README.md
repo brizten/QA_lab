@@ -2,6 +2,8 @@
 
 Локальное окружение проекта поднимается через Docker Compose и включает PostgreSQL 16, Redis 7 и pgAdmin 4.
 
+Практическое руководство для QA, autotesters, developers, business users и admins находится в [USER_GUIDE.md](USER_GUIDE.md).
+
 ## Final Quick Start
 
 Ниже самый короткий путь для локального запуска backend и frontend с Docker-инфраструктурой:
